@@ -1,4 +1,4 @@
-(defproject fboulay/lein-kibit "0.1.8.1-SNAPSHOT"
+(defproject org.clojars.fboulay/lein-kibit "0.1.8.1-SNAPSHOT"
   :description "Working kibit lein plugin for SonarQube"
   :url "https://github.com/fboulay/lein-kibit"
   :license {:name "Eclipse Public License"
