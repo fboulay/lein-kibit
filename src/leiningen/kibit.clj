@@ -1,31 +1,26 @@
 (ns leiningen.kibit
   (:require [leiningen.core.eval :refer [eval-in-project]]
             [clojure.tools.namespace.find :refer [find-namespaces]]
-            [clojure.java.io :as io]
-            [clojure.string :as str])
+            [clojure.java.io :as io])
   (:import (java.nio.file Paths)))
-
 
 (defn ^:no-project-needed kibit
   [project & args]
   (let [src-paths     (get-in project [:kibit :source-paths] ["rules"])
         repositories (:repositories project)
         local-repo    (:local-repo project)
-        kibit-project `{:dependencies [[jonase/kibit ~(str/trim-newline
-                                                        (slurp
-                                                          (io/resource
-                                                            "jonase/kibit/VERSION")))]]
+        kibit-project `{:dependencies [[jonase/kibit "0.1.8"]]
                         :source-paths ~src-paths
                         :repositories ~repositories
                         :local-repo   ~local-repo}
         cwd           (.toAbsolutePath (Paths/get "" (into-array String nil)))
         ;; This could become a transducer once we want to force a dependency on Lein 1.6.0 or higher.
         paths         (->> (concat                          ;; Collect all of the possible places sources can be defined.
-                             (:source-paths project)
-                             [(:source-path project)]
-                             (mapcat :source-paths (get-in project [:profiles]))
-                             (mapcat :source-paths (get-in project [:cljsbuild :builds]))
-                             (mapcat :source-paths (get-in project [:cljx :builds])))
+                            (:source-paths project)
+                            [(:source-path project)]
+                            (mapcat :source-paths (get-in project [:profiles]))
+                            (mapcat :source-paths (get-in project [:cljsbuild :builds]))
+                            (mapcat :source-paths (get-in project [:cljx :builds])))
                            (filter some?)                   ;; Remove nils
                            ;; Convert all String paths to absolute paths (Leiningen turns root :source-paths into absolute path).
                            (map #(.toAbsolutePath (Paths/get % (into-array String nil))))
@@ -43,4 +38,4 @@
                              (require n#)))]
     (try (eval-in-project kibit-project src req)
          (catch Exception e
-           (throw (ex-info "" {:exit-code 1}))))))
+           (throw (ex-info (.getMessage e) {:exit-code 1} (.getCause e)))))))
