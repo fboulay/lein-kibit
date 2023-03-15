@@ -1,6 +1,6 @@
 (ns leiningen.kibit
-  (:require [leiningen.core.eval :refer [eval-in-project]]
-            [clojure.tools.namespace.find :refer [find-namespaces]]
+  (:require [leiningen.core.eval :as l]
+            [clojure.tools.namespace.find :as n]
             [clojure.java.io :as io])
   (:import (java.nio.file Paths)))
 
@@ -9,7 +9,8 @@
   (let [src-paths     (get-in project [:kibit :source-paths] ["rules"])
         repositories (:repositories project)
         local-repo    (:local-repo project)
-        kibit-project `{:dependencies [[jonase/kibit "0.1.8"]]
+        kibit-project `{:dependencies [[org.clojure/clojure "1.11.1"]
+                                       [jonase/kibit "0.1.8"]]
                         :source-paths ~src-paths
                         :repositories ~repositories
                         :local-repo   ~local-repo}
@@ -32,10 +33,10 @@
                                                   (when ~rules
                                                     (apply concat (vals ~rules)))
                                                   ~@args)
-        ns-xs         (mapcat identity (map #(find-namespaces [(io/file %)]) src-paths))
+        ns-xs         (mapcat identity (map #(n/find-namespaces [(io/file %)]) src-paths))
         req           `(do (require 'kibit.driver)
                            (doseq [n# '~ns-xs]
                              (require n#)))]
-    (try (eval-in-project kibit-project src req)
+    (try (l/eval-in-project kibit-project src req)
          (catch Exception e
            (throw (ex-info (.getMessage e) {:exit-code 1} (.getCause e)))))))
